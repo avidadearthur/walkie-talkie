@@ -14,39 +14,39 @@ static const char* TAG = "simple_transport";
 static void init_wifi() {
     esp_err_t err = esp_netif_init();
     if (err != ESP_OK) {
-        printf("Error initializing netif\n");
+        ESP_LOGE(TAG, "Error initializing netif");
     }
 
     err = esp_event_loop_create_default();
     if (err != ESP_OK) {
-        printf("Error creating default event loop\n");
+        ESP_LOGE(TAG, "Error creating event loop");
     }
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 
     err = esp_wifi_init(&cfg);
     if (err != ESP_OK) {
-        printf("Error initializing wifi\n");
+        ESP_LOGE(TAG, "Error initializing wifi");
     }
 
     err = esp_wifi_set_storage(WIFI_STORAGE_RAM);
     if (err != ESP_OK) {
-        printf("Error setting wifi storage\n");
+        ESP_LOGE(TAG, "Error setting wifi storage");
     }
 
     err = esp_wifi_set_mode(WIFI_MODE_STA);
     if (err != ESP_OK) {
-        printf("Error setting wifi mode\n");
+        ESP_LOGE(TAG, "Error setting wifi mode");
     }
 
     err = esp_wifi_start();
     if (err != ESP_OK) {
-        printf("Error starting wifi\n");
+        ESP_LOGE(TAG, "Error starting wifi");
     }
 
     err = esp_wifi_set_channel(WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE);
     if (err != ESP_OK) {
-        printf("Error setting wifi channel\n");
+        ESP_LOGE(TAG, "Error setting wifi channel");
     }
 
     err = esp_wifi_internal_set_fix_rate(ESP_IF_WIFI_STA, 1, WIFI_PHY_RATE_MCS7_SGI);
@@ -66,7 +66,7 @@ static void init_esp_now() {
 
     err = esp_now_register_recv_cb(recv_callback);
     if (err != ESP_OK) {
-        printf("Error registering ESP NOW receiver callback\n");
+        ESP_LOGE(TAG, "Error registering ESP NOW receive callback");
     }
 
     esp_now_peer_info_t broadcast_peer = {
@@ -80,11 +80,24 @@ static void init_esp_now() {
 
     err = esp_now_add_peer(&broadcast_peer);
     if (err != ESP_OK) {
-        printf("Error adding ESP NOW peer\n");
+        ESP_LOGE(TAG, "Error adding peer");
     }
 }
 
 static void sender_task(void* arg) {
+
+    while (1) {
+
+        for (int i = 0; i < 250; i++) {
+            espnow_data[i] = i;
+        }
+        esp_err_t err = esp_now_send(broadcast_mac, espnow_data, 250);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Error sending ESP NOW data");
+        }
+
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
 }
 
 static void init_non_volatile_storage() {
