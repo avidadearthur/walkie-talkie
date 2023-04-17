@@ -4,4 +4,6 @@ idf_component_register(SRCS
                        "audio.c"
                        "main.c"
                        "transport.c"
+                       "config.c"
+                       "simple_transport.c"
                        INCLUDE_DIRS ".")
