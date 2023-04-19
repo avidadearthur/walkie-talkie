@@ -1,6 +1,5 @@
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include <stdio.h>
+#include "config.h"
+#include "simple_transport.h"
 // #include "audio.h"
 // #include "transport.h"
 
@@ -21,4 +20,5 @@ void app_main(void) {
 
     // Loopback testing
     // init_audio(mic_stream_buf, mic_stream_buf);
+    init_simple_transport();
 }
