@@ -5,12 +5,6 @@
 #include "esp_private/wifi.h"
 #include <string.h>
 
-#define WIFI_CHANNEL (12)
-#define STATE_CHANNEL (0)
-
-#define ESPNOW_TX_MODE (1)
-#define ESPNOW_RX_MODE (0)
-
 static uint8_t broadcast_mac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 static uint8_t espnow_data[250];
 uint8_t espnow_mode = ESPNOW_RX_MODE;
@@ -103,17 +97,6 @@ void sender_task(void* arg) {
         }
 
         vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-}
-
-void signal_RX(void) {
-
-    for (int i = 0; i < 250; i++) {
-        espnow_data[i] = espnow_mode;
-    }
-    esp_err_t err = esp_now_send(broadcast_mac, espnow_data, 250);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Error sending ESP NOW data");
     }
 }
 
