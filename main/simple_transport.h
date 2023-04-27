@@ -14,8 +14,6 @@ void init_simple_transport(void);
 
 static fsm_state_t peer_state;
 
-void signal_RX(void);
-
-void signal_TX(void);
+void signal_RXTX_toggle(void);
 
 void sender_task(void* arg);

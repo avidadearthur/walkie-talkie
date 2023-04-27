@@ -77,7 +77,7 @@ void app_main(void) {
                 case RX_STATE:
                     ESP_LOGI(TAG, "Current state: RX_STATE");
 
-                    signal_RX();
+                    signal_RXTX_toggle();
 
                     // Log the peer state
                     if (peer_state == RX_STATE) {
@@ -91,7 +91,7 @@ void app_main(void) {
                 case TX_STATE:
                     ESP_LOGI(TAG, "Current state: TX_STATE");
 
-                    signal_TX();
+                    signal_RXTX_toggle();
 
                     // Log the peer state
                     if (peer_state == RX_STATE) {

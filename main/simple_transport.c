@@ -8,10 +8,12 @@
 #define WIFI_CHANNEL (12)
 #define STATE_CHANNEL (0)
 
+#define ESPNOW_TX_MODE (1)
+#define ESPNOW_RX_MODE (0)
+
 static uint8_t broadcast_mac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 static uint8_t espnow_data[250];
-uint8_t espnow_TX_mode = 1;
-uint8_t espnow_RX_mode = 0;
+uint8_t espnow_mode = ESPNOW_RX_MODE;
 
 static const char* TAG = "simple_transport";
 
@@ -107,7 +109,7 @@ void sender_task(void* arg) {
 void signal_RX(void) {
 
     for (int i = 0; i < 250; i++) {
-        espnow_data[i] = espnow_RX_mode;
+        espnow_data[i] = espnow_mode;
     }
     esp_err_t err = esp_now_send(broadcast_mac, espnow_data, 250);
     if (err != ESP_OK) {
@@ -115,10 +117,15 @@ void signal_RX(void) {
     }
 }
 
-void signal_TX(void) {
+void signal_RXTX_toggle() {
+    if (espnow_mode == ESPNOW_RX_MODE) {
+        espnow_mode = ESPNOW_TX_MODE;
+    } else {
+        espnow_mode = ESPNOW_RX_MODE;
+    }
 
     for (int i = 0; i < 250; i++) {
-        espnow_data[i] = espnow_TX_mode;
+        espnow_data[i] = espnow_mode;
     }
     esp_err_t err = esp_now_send(broadcast_mac, espnow_data, 250);
     if (err != ESP_OK) {
