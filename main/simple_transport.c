@@ -3,11 +3,15 @@
 #include "esp_now.h"
 #include "nvs_flash.h"
 #include "esp_private/wifi.h"
+#include <string.h>
 
 #define WIFI_CHANNEL (12)
+#define STATE_CHANNEL (0)
 
 static uint8_t broadcast_mac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 static uint8_t espnow_data[250];
+uint8_t espnow_TX_mode = 1;
+uint8_t espnow_RX_mode = 0;
 
 static const char* TAG = "simple_transport";
 
@@ -84,7 +88,7 @@ static void init_esp_now() {
     }
 }
 
-static void sender_task(void* arg) {
+void sender_task(void* arg) {
 
     while (1) {
 
@@ -97,6 +101,28 @@ static void sender_task(void* arg) {
         }
 
         vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
+
+void signal_RX(void) {
+
+    for (int i = 0; i < 250; i++) {
+        espnow_data[i] = espnow_RX_mode;
+    }
+    esp_err_t err = esp_now_send(broadcast_mac, espnow_data, 250);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Error sending ESP NOW data");
+    }
+}
+
+void signal_TX(void) {
+
+    for (int i = 0; i < 250; i++) {
+        espnow_data[i] = espnow_TX_mode;
+    }
+    esp_err_t err = esp_now_send(broadcast_mac, espnow_data, 250);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Error sending ESP NOW data");
     }
 }
 
@@ -120,6 +146,4 @@ void init_simple_transport(void) {
     init_non_volatile_storage();
     init_wifi();
     init_esp_now();
-
-    xTaskCreate(sender_task, "sender_task", 4096, NULL, 10, NULL);
 }
