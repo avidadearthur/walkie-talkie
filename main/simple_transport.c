@@ -7,7 +7,9 @@
 
 static uint8_t broadcast_mac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 static uint8_t espnow_data[250];
-uint8_t espnow_mode = ESPNOW_RX_MODE;
+
+extern fsm_state_t current_state;
+static fsm_state_t peer_state;
 
 static const char* TAG = "simple_transport";
 
@@ -101,7 +103,9 @@ void sender_task(void* arg) {
 }
 
 void signal_RXTX_toggle() {
-    if (espnow_mode == ESPNOW_RX_MODE) {
+    uint8_t espnow_mode;
+
+    if (current_state == RX_STATE) {
         espnow_mode = ESPNOW_TX_MODE;
     } else {
         espnow_mode = ESPNOW_RX_MODE;

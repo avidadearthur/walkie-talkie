@@ -13,7 +13,7 @@
 
 static const char* TAG = "main";
 
-static fsm_state_t current_state = RX_STATE;
+fsm_state_t current_state = RX_STATE;
 
 bool interrupt_flag = false;
 uint32_t last_button_isr_time = 0;
