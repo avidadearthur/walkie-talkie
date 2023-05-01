@@ -2,11 +2,11 @@
 #include "simple_transport.h"
 #include "freertos/semphr.h"
 #include "driver/gpio.h"
-// #include "audio.h"
-// #include "transport.h"
+#include "audio.h"
+#include "transport.h"
 
-// static StreamBufferHandle_t mic_stream_buf;
-// static StreamBufferHandle_t network_stream_buf;
+static StreamBufferHandle_t mic_stream_buf;
+static StreamBufferHandle_t network_stream_buf;
 
 #define SET_BUTTON_GPIO 33
 #define BUTTON_DEBOUNCE_TIME_MS 300
@@ -61,11 +61,13 @@ void app_main(void) {
     xSemaphoreGive(
         xSemaphore); // force if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE) to be true
 
-    init_simple_transport();
+    mic_stream_buf = xStreamBufferCreate(512, 1);
+    network_stream_buf = xStreamBufferCreate(512, 1);
 
-    if (current_state == TX_STATE) {
-        xTaskCreate(sender_task, "sender_task", 4096, NULL, 10, NULL);
-    }
+    // init_transport(mic_stream_buf, network_stream_buf);
+    init_simple_transport(mic_stream_buf, network_stream_buf);
+
+    init_audio(mic_stream_buf, network_stream_buf);
 
     signal_RXTX_toggle();
 
@@ -79,7 +81,10 @@ void app_main(void) {
                 case RX_STATE:
                     ESP_LOGI(TAG, "Current state: RX_STATE");
 
+                    vTaskSuspend(audio_capture_task_handle);
+                    vTaskResume(audio_playback_task_handle);
                     signal_RXTX_toggle();
+                    vTaskSuspend(sender_task_handle);
 
                     // Log the peer state
                     if (peer_state == RX_STATE) {
@@ -93,7 +98,11 @@ void app_main(void) {
                 case TX_STATE:
                     ESP_LOGI(TAG, "Current state: TX_STATE");
 
+                    // Suspende the playback task
+                    vTaskSuspend(audio_playback_task_handle);
+                    vTaskResume(audio_capture_task_handle);
                     signal_RXTX_toggle();
+                    vTaskResume(sender_task_handle);
 
                     // Log the peer state
                     if (peer_state == RX_STATE) {
@@ -114,13 +123,4 @@ void app_main(void) {
         }
     }
     vTaskDelete(NULL);
-
-    // mic_stream_buf = xStreamBufferCreate(512, 1);
-    // network_stream_buf = xStreamBufferCreate(512, 1);
-
-    // init_transport(mic_stream_buf, network_stream_buf);
-    // init_audio(mic_stream_buf, network_stream_buf);
-
-    // Loopback testing
-    // init_audio(mic_stream_buf, mic_stream_buf);
 }

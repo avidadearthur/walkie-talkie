@@ -11,6 +11,12 @@ static uint8_t espnow_data[250];
 extern fsm_state_t current_state;
 static fsm_state_t peer_state;
 
+static StreamBufferHandle_t network_stream_buf;
+static StreamBufferHandle_t microphone_stream_buf;
+
+// task handle for sender_task
+TaskHandle_t sender_task_handle;
+
 static const char* TAG = "simple_transport";
 
 static void init_wifi() {
@@ -118,17 +124,18 @@ static void init_esp_now_peer() {
 
 void sender_task(void* arg) {
 
-    while (1) {
+    while (true) {
+        size_t num_bytes = xStreamBufferReceive(microphone_stream_buf, (void*)esp_now_send_buf,
+                                                sizeof(esp_now_send_buf), portMAX_DELAY);
 
-        for (int i = 0; i < 250; i++) {
-            espnow_data[i] = i;
-        }
-        esp_err_t err = esp_now_send(broadcast_mac, espnow_data, 250);
-        if (err != ESP_OK) {
-            ESP_LOGE(TAG, "Error sending ESP NOW data");
-        }
+        if (num_bytes > 0) {
+            // printf("Received %u bytes\n", num_bytes);
 
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+            esp_err_t err = esp_now_send(broadcast_mac, esp_now_send_buf, sizeof(esp_now_send_buf));
+            if (err != ESP_OK) {
+                printf("Error sending ESP NOW packet: %x\n", err);
+            }
+        }
     }
 }
 
@@ -165,9 +172,13 @@ static void init_non_volatile_storage() {
     }
 }
 
-void init_simple_transport(void) {
+void init_simple_transport(StreamBufferHandle_t mic_stream_buf,
+                           StreamBufferHandle_t net_stream_buf) {
     // Log init of Simple Transport with LOGI
     ESP_LOGI(TAG, "Initializing Simple Transport");
+
+    network_stream_buf = net_stream_buf;
+    microphone_stream_buf = mic_stream_buf;
 
     init_non_volatile_storage();
     init_wifi();
@@ -179,4 +190,8 @@ void init_simple_transport(void) {
     }
 
     init_esp_now_peer();
+
+    xTaskCreate(sender_task, "sender_task", 4096, NULL, 10, sender_task_handle);
+    // suspend the sender task until the peer is in the RX state
+    vTaskSuspend(sender_task_handle);
 }

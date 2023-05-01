@@ -145,7 +145,13 @@ static void audio_playback_task(void* task_param) {
 void init_audio(StreamBufferHandle_t mic_stream_buf, StreamBufferHandle_t network_stream_buf) {
     printf("Init audio!\n");
 
-    xTaskCreate(audio_capture_task, "audio_capture_task", 4096, (void*)mic_stream_buf, 10, NULL);
+    xTaskCreate(audio_capture_task, "audio_capture_task", 4096, (void*)mic_stream_buf, 10,
+                audio_capture_task_handle);
+    // suspend audio capture task until we need it
+    vTaskSuspend(audio_capture_task_handle);
+
     xTaskCreate(audio_playback_task, "audio_playback_task", 4096, (void*)network_stream_buf, 10,
-                NULL);
+                audio_playback_task_handle);
+    // suspend audio playback task until we need it
+    // vTaskSuspend(audio_playback_task_handle);
 }
