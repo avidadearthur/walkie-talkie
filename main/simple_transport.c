@@ -46,24 +46,54 @@ static void init_wifi() {
         ESP_LOGE(TAG, "Error starting wifi");
     }
 
-    err = esp_wifi_set_channel(WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Error setting wifi channel");
-    }
-
     err = esp_wifi_internal_set_fix_rate(ESP_IF_WIFI_STA, 1, WIFI_PHY_RATE_MCS7_SGI);
 }
 
 static void recv_callback(const uint8_t* mac_addr, const uint8_t* data, int len) {
 
-    ESP_LOGI(TAG, "Received %u bytes from %02x:%02x:%02x:%02x:%02x:%02x", len, mac_addr[0],
-             mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+    // Bad way of checking if the message is a state message
+    bool all_zeros = true;
+    for (int i = 0; i < len; i++) {
+        if (data[i] != 0) {
+            all_zeros = false;
+            break;
+        }
+    }
+    bool all_ones = true;
+    for (int i = 0; i < len; i++) {
+        if (data[i] != 1) {
+            all_ones = false;
+            break;
+        }
+    }
+
+    if (all_ones) {
+        peer_state = RX_STATE;
+    } else if (all_zeros) {
+        peer_state = TX_STATE;
+    } else {
+        ESP_LOGE(TAG, "Received invalid message");
+    }
+
+    // log the new state of the peer
+    if (all_ones) {
+        ESP_LOGI(TAG, "%02x:%02x:%02x:%02x:%02x:%02x is now in RX state", mac_addr[0], mac_addr[1],
+                 mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+    } else if (all_zeros) {
+        ESP_LOGI(TAG, "%02x:%02x:%02x:%02x:%02x:%02x is now in TX state", mac_addr[0], mac_addr[1],
+                 mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+    } else {
+        ESP_LOGI(TAG, "Received %d bytes from %02x:%02x:%02x:%02x:%02x:%02x", len, mac_addr[0],
+                 mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+    }
 }
 
-static void init_esp_now() {
-    esp_err_t err = esp_now_init();
+static void init_esp_now_peer() {
+
+    // test setting the channel here instead of in init_wifi()
+    esp_err_t err = esp_wifi_set_channel(WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE);
     if (err != ESP_OK) {
-        printf("Error starting ESP NOW\n");
+        ESP_LOGE(TAG, "Error setting wifi channel");
     }
 
     err = esp_now_register_recv_cb(recv_callback);
@@ -114,6 +144,8 @@ void signal_RXTX_toggle() {
     for (int i = 0; i < 250; i++) {
         espnow_data[i] = espnow_mode;
     }
+    // Log what is being sent to the peer (espnow_mode)
+    ESP_LOGI(TAG, "Changing to mode %d", espnow_mode);
     esp_err_t err = esp_now_send(broadcast_mac, espnow_data, 250);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Error sending ESP NOW data");
@@ -139,5 +171,12 @@ void init_simple_transport(void) {
 
     init_non_volatile_storage();
     init_wifi();
-    init_esp_now();
+
+    // test moving this out of init_esp_now
+    esp_err_t err = esp_now_init();
+    if (err != ESP_OK) {
+        printf("Error starting ESP NOW\n");
+    }
+
+    init_esp_now_peer();
 }
