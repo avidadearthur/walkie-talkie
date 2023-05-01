@@ -12,6 +12,7 @@ typedef enum {
 
 void init_simple_transport(void);
 
+// TODO: Remove this or update it somehow in the main task
 static fsm_state_t peer_state;
 
 void signal_RXTX_toggle(void);
