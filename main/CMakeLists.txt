@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.5)
 
 idf_component_register(SRCS
-                       "config.c"
-                       "main.c"
+                "sd_record.c" 
+                "espnow_recv.c" 
+                "main.c" 
+                "espnow_send.c" 
+                "espnow_mic.c" 
+                "config.c" 
+                "sd_record.c"
                        INCLUDE_DIRS ".")
+
