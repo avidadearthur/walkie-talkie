@@ -67,6 +67,8 @@ void app_main(void) {
         xTaskCreate(sender_task, "sender_task", 4096, NULL, 10, NULL);
     }
 
+    signal_RXTX_toggle();
+
     while (1) {
         if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE) {
             // Wait for semaphore
