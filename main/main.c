@@ -8,6 +8,46 @@
 
 static const char* TAG = "main.c";
 
+/* -------------------- Interrupt handling --------------------------------------*/
+bool interrupt_flag = false;
+uint32_t last_button_isr_time = 0;
+
+SemaphoreHandle_t xSemaphore;
+
+void IRAM_ATTR set_button_isr_handler(void* arg) {
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    uint32_t isr_time = xTaskGetTickCountFromISR();
+
+    if ((isr_time - last_button_isr_time) > pdMS_TO_TICKS(BUTTON_DEBOUNCE_TIME_MS)) {
+
+        if (my_state == RX_STATE) {
+            my_state = TX_STATE;
+        } else if (my_state == TX_STATE) {
+            my_state = RX_STATE;
+        }
+
+        xSemaphoreGiveFromISR(xSemaphore, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+
+        last_button_isr_time = isr_time; // Save last ISR time
+    }
+}
+/*--------------------------------------------------------------------------------------*/
+
+// move to config.h later
+void init_gipio(void) {
+    gpio_config_t io_conf;
+    io_conf.intr_type = GPIO_INTR_POSEDGE;
+    io_conf.mode = GPIO_MODE_INPUT;
+    io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
+    io_conf.pin_bit_mask = (1ULL << SET_BUTTON_GPIO);
+    gpio_config(&io_conf);
+
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(SET_BUTTON_GPIO, set_button_isr_handler, NULL);
+}
+/*--------------------------------------------------------------------------------------*/
+
 #if (RECV)
 static StreamBufferHandle_t network_stream_buf; // only for reciever
 #else
