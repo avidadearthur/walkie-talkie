@@ -101,10 +101,6 @@ typedef enum {
 
 } fsm_state_t;
 
-// initially both devices are in RX_STATE
-fsm_state_t my_state = RX_STATE;
-fsm_state_t peer_state = RX_STATE;
-
 // config button
 #define SET_BUTTON_GPIO 33
 #define BUTTON_DEBOUNCE_TIME_MS 300

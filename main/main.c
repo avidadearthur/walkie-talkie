@@ -8,6 +8,10 @@
 
 static const char* TAG = "main.c";
 
+// initially both devices are in RX_STATE
+fsm_state_t my_state = RX_STATE;
+fsm_state_t peer_state = RX_STATE;
+
 /* -------------------- Interrupt handling --------------------------------------*/
 bool interrupt_flag = false;
 uint32_t last_button_isr_time = 0;

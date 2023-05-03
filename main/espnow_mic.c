@@ -10,6 +10,11 @@ StreamBufferHandle_t fft_stream_buf;
 StreamBufferHandle_t record_stream_buf;
 
 //
+
+// initially both devices are in RX_STATE
+extern fsm_state_t my_state;
+extern fsm_state_t peer_state;
+
 StreamBufferHandle_t mic_stream_buffer;
 StreamBufferHandle_t network_stream_buffer;
 
