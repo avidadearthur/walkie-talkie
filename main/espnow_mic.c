@@ -9,11 +9,18 @@ static const char* TAG = "espnow_mic";
 StreamBufferHandle_t fft_stream_buf;
 StreamBufferHandle_t record_stream_buf;
 
+//
+StreamBufferHandle_t mic_stream_buffer;
+StreamBufferHandle_t network_stream_buffer;
+
 uint8_t* mic_read_buf;
 uint8_t* spk_write_buf;
 
 // reference: https://www.codeinsideout.com/blog/freertos/notification/#two-looping-tasks
 TaskHandle_t adcTaskHandle = NULL;
+
+//
+TaskHandle_t adcdacTaskHandle = NULL;
 
 // suspend i2s_adc_capture_task function
 void suspend_adc_capture_task() {
@@ -93,20 +100,6 @@ void i2s_adc_capture_task(void* task_param) {
                 deinit_config();
                 exit(errno);
             }
-
-/**
- * xstreambuffersend to fft task
- */
-#if FFT_TASK
-            size_t byte_sent = xStreamBufferSend(fft_stream_buf, (void*)mic_read_buf,
-                                                 EXAMPLE_I2S_READ_LEN / 16, portMAX_DELAY);
-            if (byte_sent != (EXAMPLE_I2S_READ_LEN / 16)) {
-                ESP_LOGE(TAG, "Error: only sent %d bytes to the stream buffer out of %d \n",
-                         byte_sent, (EXAMPLE_I2S_READ_LEN / 16));
-                deinit_config();
-                exit(errno);
-            }
-#endif
 
             // scale the data to 8 bit
             i2s_adc_data_scale(mic_read_buf, mic_read_buf, read_len);
@@ -217,6 +210,96 @@ esp_err_t init_audio_recv(StreamBufferHandle_t network_stream_buf) {
     // /* thread for filling the buf for the reciever and dac */
     xTaskCreate(i2s_dac_playback_task, "i2s_dac_playback_task", 2048, (void*)network_stream_buf,
                 IDLE_TASK_PRIO, NULL);
+
+    return ESP_OK;
+}
+
+// i2s adc capture task
+void i2s_adc_dac_task(void* task_param) {
+
+    if (my_state == TX_STATE) {
+        free(spk_write_buf);
+
+        int read_len = (EXAMPLE_I2S_READ_LEN / 2) * sizeof(char);
+        mic_read_buf = calloc(EXAMPLE_I2S_READ_LEN, sizeof(char));
+
+        // enable i2s adc
+        size_t bytes_read = 0;          // to count the number of bytes read from the i2s adc
+        TickType_t ticks_to_wait = 100; // wait 100 ticks for the mic_stream_buf to be available
+        // enable i2s adc
+        i2s_adc_enable(EXAMPLE_I2S_NUM);
+
+        while (my_state == TX_STATE) {
+
+            // read from i2s bus and use errno to check if i2s_read is successful
+            if (i2s_read(EXAMPLE_I2S_NUM, (char*)mic_read_buf, read_len, &bytes_read,
+                         ticks_to_wait) != ESP_OK) {
+                ESP_LOGE(TAG, "Error reading from i2s adc: %d", errno);
+                deinit_config();
+                exit(errno);
+            }
+
+            // check if the number of bytes read is equal to the number of bytes to read
+            if (bytes_read != read_len) {
+                ESP_LOGE(TAG, "Error reading from i2s adc: %d", errno);
+                deinit_config();
+                exit(errno);
+            }
+
+            // scale the data to 8 bit
+            i2s_adc_data_scale(mic_read_buf, mic_read_buf, read_len);
+
+            /**
+             * xstreambuffersend is a blocking function that sends data to the stream buffer,
+             * esp_now_send needs to send 128 packets of 250 bytes each, so the stream buffer needs
+             * to be able to hold at least 2-3 times of 128 * 250 bytes = BYTE_RATE bytes
+             * */
+            size_t espnow_byte =
+                xStreamBufferSend(mic_stream_buffer, (void*)mic_read_buf, read_len, portMAX_DELAY);
+            if (espnow_byte != read_len) {
+                ESP_LOGE(TAG, "Error: only sent %d bytes to the stream buffer out of %d \n",
+                         espnow_byte, read_len);
+            }
+        }
+    } else if (my_state == RX_STATE) {
+        // disable i2s adc
+        i2s_adc_disable(EXAMPLE_I2S_NUM);
+        ESP_LOGI(TAG, "i2s adc disabled\n");
+        free(mic_read_buf);
+
+        size_t bytes_written = 0;
+        spk_write_buf = (uint8_t*)calloc(BYTE_RATE, sizeof(char));
+        assert(spk_write_buf != NULL);
+
+        while (my_state == RX_STATE) {
+            // read from the stream buffer, use errno to check if xstreambufferreceive is successful
+            size_t num_bytes = xStreamBufferReceive(network_stream_buffer, (void*)spk_write_buf,
+                                                    BYTE_RATE, portMAX_DELAY);
+            if (num_bytes > 0) {
+                // send data to i2s dac
+                esp_err_t err = i2s_write(EXAMPLE_I2S_NUM, spk_write_buf, num_bytes, &bytes_written,
+                                          portMAX_DELAY);
+                if ((err != ESP_OK)) {
+                    ESP_LOGE(TAG, "Error writing I2S: %0x\n", err);
+                }
+            }
+        }
+    }
+}
+
+/* new task combining adc and dac tasks */
+esp_err_t init_audio_transport(StreamBufferHandle_t mic_stream_buf,
+                               StreamBufferHandle_t network_stream_buf) {
+
+    ESP_LOGI(TAG, "initializing i2s adc dac\n");
+    mic_stream_buffer = mic_stream_buf;
+    network_stream_buffer = network_stream_buf;
+
+    // create the adc capture task and pin the task to core 0
+    xTaskCreate(i2s_adc_dac_task, "i2s_adc_dac_task", 4096, NULL, IDLE_TASK_PRIO,
+                &adcdacTaskHandle);
+
+    configASSERT(adcdacTaskHandle);
 
     return ESP_OK;
 }
