@@ -269,7 +269,6 @@ void i2s_adc_dac_task(void* task_param) {
 
             // init_config(my_state);
             while (my_state == RX_STATE) {
-                ESP_LOGI(TAG, "i2s dac enabled");
                 // read from the stream buffer, use errno to check if xstreambufferreceive is successful
                 size_t num_bytes =
                     xStreamBufferReceive(spk_stream_buffer, (void*)spk_write_buf, BYTE_RATE, portMAX_DELAY);
@@ -280,7 +279,6 @@ void i2s_adc_dac_task(void* task_param) {
                     if ((err != ESP_OK)) {
                         ESP_LOGE(TAG, "Error writing I2S: %0x", err);
                     }
-                    ESP_LOGI(TAG, "bytes_written = %d", num_bytes);
                 }
             }
             deinit_config(my_state);
