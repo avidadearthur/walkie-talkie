@@ -94,6 +94,17 @@
 #define USE_STDIN 1
 // #undef USE_STDIN
 
+// define the fsm state type¨
+typedef enum {
+    RX_STATE,
+    TX_STATE
+
+} fsm_state_t;
+
+// initially both devices are in RX_STATE
+fsm_state_t my_state = RX_STATE;
+fsm_state_t peer_state = RX_STATE;
+
 void espnow_wifi_init(void);
 void init_non_volatile_storage(void);
 void i2s_adc_dac_config(void);
