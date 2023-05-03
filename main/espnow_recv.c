@@ -34,7 +34,7 @@ void init_recv(StreamBufferHandle_t net_stream_buf){
     network_stream_buf = net_stream_buf;
     if (network_stream_buf == NULL) {
         ESP_LOGE(TAG, "Error creating network stream buffer: %d", errno);
-        deinit_config();
+        deinit_config(RX_STATE);
         exit(errno);
     }
 }

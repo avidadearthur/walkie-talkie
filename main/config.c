@@ -55,8 +55,17 @@ void init_non_volatile_storage(void) {
  * (100ms = 0.1s) = 44100 * 2 * 0.1 = 8810 realistic cap is 100KB = bit_per_sample * num_of_channels
  * * num_of_dma_descriptors * num_of_dma_frames / 8
  */
-void i2s_adc_dac_config(void) {
+void i2s_adc_dac_config(fsm_state_t state) {
     int i2s_num = EXAMPLE_I2S_NUM;
+
+    i2s_channel_fmt_t channel_format;
+    if (state == TX_STATE) {
+        channel_format = EXAMPLE_I2S_FORMAT; // only right channel for adc
+    }
+    else {
+        channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT; // only right channel for adc
+    }
+
     i2s_config_t i2s_config = {
         .mode =
             I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_TX | I2S_MODE_DAC_BUILT_IN |
@@ -64,11 +73,7 @@ void i2s_adc_dac_config(void) {
         .sample_rate = EXAMPLE_I2S_SAMPLE_RATE,            // 16KHz for adc
         .bits_per_sample = EXAMPLE_I2S_SAMPLE_BITS,        // 16 bits for adc
         .communication_format = I2S_COMM_FORMAT_STAND_MSB, // standard format for adc
-#if (!RECV)
-        .channel_format = EXAMPLE_I2S_FORMAT, // only right channel for adc
-#else
-        .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT, // only right channel for adc
-#endif
+        .channel_format = channel_format,
         .intr_alloc_flags = 0, // default interrupt priority
         .dma_buf_count = 4,    // number of dma descriptors, or count for adc
         .dma_buf_len = 512,    // number of dma frames, or length for adc
@@ -94,15 +99,15 @@ void i2s_adc_dac_config(void) {
     // reference: i2s_write(I2S_NUM, samples_data, ((bits+8)/16)*SAMPLE_PER_CYCLE*4,
     // &i2s_bytes_write, 100);
 
-#if (RECV)
-    // init DAC pad (GPIO25 & GPIO26) & mode
-    i2s_set_pin(i2s_num, NULL);
-    // set i2s clock source for i2s spk
-    i2s_set_clk(i2s_num, EXAMPLE_I2S_SAMPLE_RATE, EXAMPLE_I2S_SAMPLE_BITS, 1);
-    // set i2s sample rate for respective dac channel of i2s spk (clock source is set automatically
-    // by the function)
-    i2s_set_sample_rates(i2s_num, EXAMPLE_I2S_SAMPLE_RATE);
-#endif
+    if (state == RX_STATE) {
+        // init DAC pad (GPIO25 & GPIO26) & mode
+        i2s_set_pin(i2s_num, NULL);
+        // set i2s clock source for i2s spk
+        i2s_set_clk(i2s_num, EXAMPLE_I2S_SAMPLE_RATE, EXAMPLE_I2S_SAMPLE_BITS, 1);
+        // set i2s sample rate for respective dac channel of i2s spk (clock source is set automatically
+        // by the function)
+        i2s_set_sample_rates(i2s_num, EXAMPLE_I2S_SAMPLE_RATE);
+    }
 }
 
 /* initialized espnow */
@@ -110,12 +115,10 @@ esp_err_t espnow_init(void) {
 
     /* Initialize ESPNOW and register sending and receiving callback function. */
     ESP_ERROR_CHECK(esp_now_init());
-#if (RECV)
     /**
      * registration of receiving callback function
      * */
     ESP_ERROR_CHECK(esp_now_register_recv_cb(espnow_recv_task));
-#endif
 
 #if CONFIG_ESP_WIFI_STA_DISCONNECTED_PM_ENABLE
     ESP_ERROR_CHECK(esp_now_set_wake_window(65535));
@@ -142,12 +145,12 @@ esp_err_t espnow_init(void) {
     return ESP_OK;
 }
 
-void init_config(void) {
+void init_config(fsm_state_t state) {
     init_non_volatile_storage();
     espnow_wifi_init();
     espnow_init();
 
-    i2s_adc_dac_config();
+    i2s_adc_dac_config(state);
     // get the clock rate for adc and dac
     float freq = i2s_get_clk(EXAMPLE_I2S_NUM);
     printf("i2s clock rate: %f, sample rate: %d, bits per sample: %d \n", freq,
@@ -160,21 +163,17 @@ void init_config(void) {
 }
 
 // terminate espnow, i2s, wifi
-void deinit_config(void) {
+void deinit_config(fsm_state_t state) {
 
-    esp_now_deinit();
-#if (!RECV)
-    i2s_adc_disable(EXAMPLE_I2S_NUM);
-#endif
-#if (RECV)
-    i2s_set_dac_mode(I2S_DAC_CHANNEL_DISABLE);
-#endif
-    i2s_driver_uninstall(EXAMPLE_I2S_NUM);
-    esp_wifi_stop();
-    esp_wifi_deinit();
-
-#if (!RECV)
-    free(mic_read_buf);
-#endif
-    free(spk_write_buf);
+    // esp_now_deinit();
+    if (state == RX_STATE) {
+        i2s_adc_disable(EXAMPLE_I2S_NUM);
+        ESP_LOGI(TAG, "ADC disabled");
+        free(mic_read_buf);
+    }
+    else {
+        i2s_set_dac_mode(I2S_DAC_CHANNEL_DISABLE);
+        ESP_LOGI(TAG, "DAC disabled");
+        free(spk_write_buf);
+    }
 }

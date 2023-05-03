@@ -95,14 +95,14 @@ void i2s_adc_capture_task(void* task_param) {
             if (i2s_read(EXAMPLE_I2S_NUM, (char*)mic_read_buf, read_len, &bytes_read,
                          ticks_to_wait) != ESP_OK) {
                 ESP_LOGE(TAG, "Error reading from i2s adc: %d", errno);
-                deinit_config();
+                deinit_config(TX_STATE);
                 exit(errno);
             }
 
             // check if the number of bytes read is equal to the number of bytes to read
             if (bytes_read != read_len) {
                 ESP_LOGE(TAG, "Error reading from i2s adc: %d", errno);
-                deinit_config();
+                deinit_config(TX_STATE);
                 exit(errno);
             }
 
@@ -223,6 +223,8 @@ esp_err_t init_audio_recv(StreamBufferHandle_t network_stream_buf) {
 void i2s_adc_dac_task(void* task_param) {
     while (1) {
         if (my_state == TX_STATE) {
+            init_config(my_state);
+
             int read_len = (EXAMPLE_I2S_READ_LEN / 2) * sizeof(char);
             mic_read_buf = calloc(EXAMPLE_I2S_READ_LEN, sizeof(char));
 
@@ -236,14 +238,14 @@ void i2s_adc_dac_task(void* task_param) {
                 if (i2s_read(EXAMPLE_I2S_NUM, (char*)mic_read_buf, read_len, &bytes_read,
                             ticks_to_wait) != ESP_OK) {
                     ESP_LOGE(TAG, "Error reading from i2s adc: %d", errno);
-                    deinit_config();
+                    deinit_config(my_state);
                     exit(errno);
                 }
 
                 // check if the number of bytes read is equal to the number of bytes to read
                 if (bytes_read != read_len) {
                     ESP_LOGE(TAG, "Error reading from i2s adc: %d", errno);
-                    deinit_config();
+                    deinit_config(my_state);
                     exit(errno);
                 }
 
@@ -257,10 +259,7 @@ void i2s_adc_dac_task(void* task_param) {
                             espnow_byte, read_len);
                 }
             }
-            // disable i2s adc
-            i2s_adc_disable(EXAMPLE_I2S_NUM);
-            ESP_LOGI(TAG, "i2s adc disabled");
-            free(mic_read_buf);
+            deinit_config(my_state);
 
         } else if (my_state == RX_STATE) {
             size_t bytes_written = 0;
@@ -268,11 +267,12 @@ void i2s_adc_dac_task(void* task_param) {
 
             const TickType_t ticks_to_wait = 0xFFFF;
 
+            // init_config(my_state);
             while (my_state == RX_STATE) {
                 ESP_LOGI(TAG, "i2s dac enabled");
                 // read from the stream buffer, use errno to check if xstreambufferreceive is successful
                 size_t num_bytes =
-                    xStreamBufferReceive(spk_stream_buffer, (void*)spk_write_buf, BYTE_RATE, ticks_to_wait);
+                    xStreamBufferReceive(spk_stream_buffer, (void*)spk_write_buf, BYTE_RATE, portMAX_DELAY);
                 if (num_bytes > 0) {
                     // send data to i2s dac
                     esp_err_t err =
@@ -283,8 +283,7 @@ void i2s_adc_dac_task(void* task_param) {
                     ESP_LOGI(TAG, "bytes_written = %d", num_bytes);
                 }
             }
-            free(spk_write_buf);
-            ESP_LOGI(TAG, "i2s dac disabled");
+            deinit_config(my_state);
 
         } 
     }

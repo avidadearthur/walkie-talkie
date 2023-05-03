@@ -106,10 +106,10 @@ typedef enum {
 
 void espnow_wifi_init(void);
 void init_non_volatile_storage(void);
-void i2s_adc_dac_config(void);
+void i2s_adc_dac_config(fsm_state_t state);
 esp_err_t espnow_init(void);
-void init_config(void);
-void deinit_config(void);
+void init_config(fsm_state_t state);
+void deinit_config(fsm_state_t state);
 
 void i2c_master_init(void);
 
