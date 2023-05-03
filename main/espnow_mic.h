@@ -11,6 +11,9 @@ esp_err_t init_audio_trans(StreamBufferHandle_t mic_stream_buf,
 esp_err_t init_audio_recv(StreamBufferHandle_t network_stream_buf);
 void mic_disp_buf(uint8_t* buf, int length);
 
+esp_err_t init_audio_transport(StreamBufferHandle_t mic_stream_buf,
+                               StreamBufferHandle_t network_stream_buf);
+
 void suspend_adc_capture_task(void);
 void resume_adc_capture_task(void);
 TaskHandle_t get_adc_task_handle(void);
