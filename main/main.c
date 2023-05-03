@@ -9,7 +9,7 @@
 static const char* TAG = "main.c";
 
 // initially both devices are in RX_STATE
-fsm_state_t my_state = TX_STATE;
+fsm_state_t my_state = RX_STATE;
 fsm_state_t peer_state = RX_STATE;
 
 /* -------------------- Interrupt handling --------------------------------------*/
@@ -52,7 +52,7 @@ void init_gipio(void) {
 }
 /*--------------------------------------------------------------------------------------*/
 
-static StreamBufferHandle_t network_stream_buf; // only for reciever
+static StreamBufferHandle_t spk_stream_buf; // only for reciever
 static StreamBufferHandle_t mic_stream_buf;
 
 void init(void) {
@@ -66,26 +66,26 @@ void init(void) {
         deinit_config();
         exit(errno);
     }
-    network_stream_buf = xStreamBufferCreate(BYTE_RATE, 1);
+    spk_stream_buf = xStreamBufferCreate(BYTE_RATE, 1);
     // check if the stream buffer is created
-    if (network_stream_buf == NULL) {
+    if (spk_stream_buf == NULL) {
         printf("Error creating network stream buffer: %d\n", errno);
         deinit_config();
         exit(errno);
     }
 
     // initialize the reciever and audio (only for reciever)
-    init_recv(network_stream_buf);
+    init_recv(spk_stream_buf);
     init_transmit(mic_stream_buf);
 
-    // init_audio_recv(network_stream_buf);
+    init_audio_recv(spk_stream_buf);
     // init_audio_trans(mic_stream_buf, record_stream_buf);
 
     // initialize espnow, nvm, wifi, and i2s configuration
     init_config();
 
     // init combined function
-    init_audio_transport(mic_stream_buf, network_stream_buf);
+    // init_audio_transport(mic_stream_buf, spk_stream_buf);
 }
 
 void app_main(void) {
