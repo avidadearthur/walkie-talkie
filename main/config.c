@@ -145,12 +145,12 @@ esp_err_t espnow_init(void) {
     return ESP_OK;
 }
 
-void init_config(fsm_state_t state) {
+void init_config(void) {
     init_non_volatile_storage();
     espnow_wifi_init();
     espnow_init();
 
-    i2s_adc_dac_config(state);
+    // i2s_adc_dac_config(RX_STATE);
     // get the clock rate for adc and dac
     float freq = i2s_get_clk(EXAMPLE_I2S_NUM);
     printf("i2s clock rate: %f, sample rate: %d, bits per sample: %d \n", freq,
@@ -176,4 +176,5 @@ void deinit_config(fsm_state_t state) {
         ESP_LOGI(TAG, "DAC disabled");
         free(spk_write_buf);
     }
+    i2s_driver_uninstall(EXAMPLE_I2S_NUM);
 }

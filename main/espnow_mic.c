@@ -223,7 +223,7 @@ esp_err_t init_audio_recv(StreamBufferHandle_t network_stream_buf) {
 void i2s_adc_dac_task(void* task_param) {
     while (1) {
         if (my_state == TX_STATE) {
-            init_config(my_state);
+            i2s_adc_dac_config(my_state);
 
             int read_len = (EXAMPLE_I2S_READ_LEN / 2) * sizeof(char);
             mic_read_buf = calloc(EXAMPLE_I2S_READ_LEN, sizeof(char));
@@ -267,7 +267,7 @@ void i2s_adc_dac_task(void* task_param) {
 
             const TickType_t ticks_to_wait = 0xFFFF;
 
-            // init_config(my_state);
+            i2s_adc_dac_config(my_state);
             while (my_state == RX_STATE) {
                 // read from the stream buffer, use errno to check if xstreambufferreceive is successful
                 size_t num_bytes =

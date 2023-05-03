@@ -87,7 +87,7 @@ void init(void) {
     init_audio_transport(mic_stream_buf, spk_stream_buf);
 
     // initialize espnow, nvm, wifi, and i2s configuration
-    init_config(RX_STATE);
+    init_config();
 }
 
 void app_main(void) {
