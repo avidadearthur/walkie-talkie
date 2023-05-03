@@ -9,7 +9,7 @@
 static const char* TAG = "main.c";
 
 // initially both devices are in RX_STATE
-fsm_state_t my_state = TX_STATE;
+fsm_state_t my_state = RX_STATE;
 fsm_state_t peer_state = RX_STATE;
 
 /* -------------------- Interrupt handling --------------------------------------*/
@@ -81,11 +81,11 @@ void init(void) {
     // init_audio_recv(spk_stream_buf);
     // init_audio_trans(mic_stream_buf, record_stream_buf);
 
-    // initialize espnow, nvm, wifi, and i2s configuration
-    init_config();
-
     // init combined function
     init_audio_transport(mic_stream_buf, spk_stream_buf);
+
+    // initialize espnow, nvm, wifi, and i2s configuration
+    init_config();
 }
 
 void app_main(void) {
