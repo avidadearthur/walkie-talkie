@@ -15,7 +15,7 @@ static StreamBufferHandle_t mic_stream_buf;
 static StreamBufferHandle_t record_stream_buf; // only for transmitter
 #endif
 
-void app_main(void) {
+void init(void) {
     // deafult transmission rate of esp_now_send is 1Mbps = 125KBps, stream buffer size has to be
     // larger than 125KBps
 #if (!RECV)
@@ -60,4 +60,8 @@ void app_main(void) {
     init_transmit(mic_stream_buf);
     init_audio_trans(mic_stream_buf, record_stream_buf);
 #endif
+}
+
+void app_main(void) {
+    init();
 }

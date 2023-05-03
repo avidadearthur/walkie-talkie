@@ -37,7 +37,7 @@
 #include <sys/stat.h>
 #include <time.h>
 
-#define RECV 0
+#define RECV 1 // remove this def later
 #define RECORD_TASK 0
 
 /** wifi configuration */
