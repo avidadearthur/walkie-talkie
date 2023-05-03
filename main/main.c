@@ -104,4 +104,38 @@ void init(void) {
 
 void app_main(void) {
     init();
+
+    init_gipio();
+
+    xSemaphore = xSemaphoreCreateBinary();
+    xSemaphoreGive(
+        xSemaphore); // force if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE) to be true
+
+    while (1) {
+        if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE) {
+            // Wait for semaphore
+            xSemaphoreTakeFromISR(xSemaphore, NULL);
+
+            // Perform actions for the current state
+            switch (my_state) {
+                case RX_STATE:
+                    ESP_LOGI(TAG, "Current state: RX_STATE");
+
+                    break;
+
+                case TX_STATE:
+                    ESP_LOGI(TAG, "Current state: TX_STATE");
+
+                    break;
+
+                default:
+                    break;
+            }
+            interrupt_flag = false; // Clear interrupt flag
+        } else {
+            // Enter idle state to wait for new interrupts
+            vTaskSuspend(NULL);
+        }
+    }
+    vTaskDelete(NULL);
 }
