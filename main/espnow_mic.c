@@ -265,7 +265,7 @@ void i2s_adc_dac_task(void* task_param) {
             size_t bytes_written = 0;
             spk_write_buf = (uint8_t*)calloc(BYTE_RATE, sizeof(char));
 
-            const TickType_t ticks_to_wait = 0xFFFF;
+            const TickType_t ticks_to_wait = 0xFF;
 
             i2s_adc_dac_config(my_state);
             while (my_state == RX_STATE) {
