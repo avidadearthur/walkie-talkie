@@ -85,6 +85,19 @@ void i2s_adc_capture_task(void* task_param) {
             ESP_LOGE(TAG, "Error: only sent %d bytes to the stream buffer out of %d \n",
                         espnow_byte, read_len);
         }
+
+/**
+ * xstreambuffersend to sd record task
+ */
+#if RECORD_TASK
+        size_t record_byte =
+            xStreamBufferSend(record_stream_buf, (void*)mic_read_buf, read_len, portMAX_DELAY);
+        // check if bytes sent is equal to bytes read
+        if (record_byte != read_len) {
+            ESP_LOGE(TAG, "Error: only sent %d bytes to the stream buffer out of %d \n",
+                        record_byte, read_len);
+        }
+#endif
     }
     // disable i2s adc
     i2s_adc_disable(EXAMPLE_I2S_NUM);
