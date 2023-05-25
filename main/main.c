@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "config.h"
 #include "espnow_mic.h"
-#include "espnow_send.h"
+#include "udp_client.h"
 #include "espnow_recv.h"
 #include "sd_record.h"
 
@@ -57,7 +57,7 @@ void app_main(void) {
     init_config();
 
 #if (!RECV)
-    init_transmit(mic_stream_buf);
+    init_transmit_udp(mic_stream_buf);
     init_audio_trans(mic_stream_buf, record_stream_buf);
 #endif
 }

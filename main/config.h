@@ -28,6 +28,7 @@
 #include "freertos/timers.h"
 #include "freertos/task.h"
 #include "freertos/stream_buffer.h"
+#include "freertos/event_groups.h"
 #include <math.h>
 #include "nvs_flash.h"
 #include "spi_flash_mmap.h"
@@ -36,6 +37,13 @@
 #include <sys/unistd.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <sys/param.h>
+#include "protocol_examples_common.h"
+#include "lwip/err.h"
+#include "lwip/sockets.h"
+#include "lwip/sys.h"
+#include <lwip/netdb.h>
+#include "addr_from_stdin.h"
 
 #define RECV 0
 #define RECORD_TASK 0

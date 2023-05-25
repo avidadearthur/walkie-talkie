@@ -106,46 +106,46 @@ void i2s_adc_dac_config(void) {
 }
 
 /* initialized espnow */
-esp_err_t espnow_init(void) {
+// esp_err_t espnow_init(void) {
 
-    /* Initialize ESPNOW and register sending and receiving callback function. */
-    ESP_ERROR_CHECK(esp_now_init());
-#if (RECV)
-    /**
-     * registration of receiving callback function
-     * */
-    ESP_ERROR_CHECK(esp_now_register_recv_cb(espnow_recv_task));
-#endif
+//     /* Initialize ESPNOW and register sending and receiving callback function. */
+//     ESP_ERROR_CHECK(esp_now_init());
+// #if (RECV)
+//     /**
+//      * registration of receiving callback function
+//      * */
+//     ESP_ERROR_CHECK(esp_now_register_recv_cb(espnow_recv_task));
+// #endif
 
-#if CONFIG_ESP_WIFI_STA_DISCONNECTED_PM_ENABLE
-    ESP_ERROR_CHECK(esp_now_set_wake_window(65535));
-#endif
-    /* Set primary master key. */
-    ESP_ERROR_CHECK(esp_now_set_pmk((uint8_t*)CONFIG_ESPNOW_PMK));
+// #if CONFIG_ESP_WIFI_STA_DISCONNECTED_PM_ENABLE
+//     ESP_ERROR_CHECK(esp_now_set_wake_window(65535));
+// #endif
+//     /* Set primary master key. */
+//     ESP_ERROR_CHECK(esp_now_set_pmk((uint8_t*)CONFIG_ESPNOW_PMK));
 
-    /* Add broadcast peer information to peer list. */
-    esp_now_peer_info_t* peer = malloc(sizeof(esp_now_peer_info_t));
-    if (peer == NULL) {
-        ESP_LOGE(TAG, "Malloc peer information fail");
-        esp_now_deinit();
-        return ESP_FAIL;
-    }
+//     /* Add broadcast peer information to peer list. */
+//     esp_now_peer_info_t* peer = malloc(sizeof(esp_now_peer_info_t));
+//     if (peer == NULL) {
+//         ESP_LOGE(TAG, "Malloc peer information fail");
+//         esp_now_deinit();
+//         return ESP_FAIL;
+//     }
 
-    memset(peer, 0, sizeof(esp_now_peer_info_t));
-    peer->channel = CONFIG_ESPNOW_CHANNEL;
-    peer->ifidx = ESPNOW_WIFI_IF;
-    peer->encrypt = false;
-    memcpy(peer->peer_addr, broadcast_mac, ESP_NOW_ETH_ALEN);
-    ESP_ERROR_CHECK(esp_now_add_peer(peer));
-    free(peer);
+//     memset(peer, 0, sizeof(esp_now_peer_info_t));
+//     peer->channel = CONFIG_ESPNOW_CHANNEL;
+//     peer->ifidx = ESPNOW_WIFI_IF;
+//     peer->encrypt = false;
+//     memcpy(peer->peer_addr, broadcast_mac, ESP_NOW_ETH_ALEN);
+//     ESP_ERROR_CHECK(esp_now_add_peer(peer));
+//     free(peer);
 
-    return ESP_OK;
-}
+//     return ESP_OK;
+// }
 
 void init_config(void) {
-    init_non_volatile_storage();
-    espnow_wifi_init();
-    espnow_init();
+    // init_non_volatile_storage();
+    // espnow_wifi_init();
+    // espnow_init();
 
     i2s_adc_dac_config();
     // get the clock rate for adc and dac
@@ -162,7 +162,7 @@ void init_config(void) {
 // terminate espnow, i2s, wifi
 void deinit_config(void) {
 
-    esp_now_deinit();
+    // esp_now_deinit();
 #if (!RECV)
     i2s_adc_disable(EXAMPLE_I2S_NUM);
 #endif

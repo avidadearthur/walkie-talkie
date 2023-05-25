@@ -4,9 +4,9 @@ idf_component_register(SRCS
                 "sd_record.c" 
                 "espnow_recv.c" 
                 "main.c" 
-                "espnow_send.c" 
                 "espnow_mic.c" 
                 "config.c" 
                 "sd_record.c"
+                "udp_client.c"
                        INCLUDE_DIRS ".")
 
