@@ -9,7 +9,7 @@
 #endif
 
 #define PORT CONFIG_EXAMPLE_PORT
-#define UDP_MAX_SEND_BYTE 1024
+#define UDP_MAX_SEND_BYTE 250
 
 static const char *TAG = "udp_client";
 // static const char *payload = "Message from ESP32 ";
