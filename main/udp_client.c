@@ -9,7 +9,7 @@
 #endif
 
 #define PORT CONFIG_EXAMPLE_PORT
-#define UDP_MAX_SEND_BYTE 250
+#define UDP_MAX_SEND_BYTE 500
 
 static const char *TAG = "udp_client";
 // static const char *payload = "Message from ESP32 ";
@@ -73,7 +73,7 @@ static void udp_client_task(void *pvParameters)
                     ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
                     break;
                 }
-                ESP_LOGI(TAG, "Message sent");
+                // ESP_LOGI(TAG, "%d bytes sent", num_bytes);
                 // vTaskDelay(2000 / portTICK_PERIOD_MS);
             } else {
                 ESP_LOGE(TAG, "No data received from mic_stream_buf!");

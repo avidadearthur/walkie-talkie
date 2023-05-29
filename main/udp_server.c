@@ -1,7 +1,7 @@
 #include "udp_server.h"
 
 #define PORT CONFIG_EXAMPLE_PORT
-#define UDP_MAX_RECV_BYTE 250
+#define UDP_MAX_RECV_BYTE 500
 
 static const char *TAG = "udp_server";
 static uint8_t udp_server_buff[UDP_MAX_RECV_BYTE];
@@ -79,8 +79,8 @@ static void udp_server_task(void *pvParameters)
 #endif
 
         while (1) {
-            ESP_LOGI(TAG, "Waiting for data");
-            int len = recvfrom(sock, udp_server_buff, sizeof(udp_server_buff), 0, (struct sockaddr *)&source_addr, &socklen);
+            // ESP_LOGI(TAG, "Waiting for data");
+            int len = recvfrom(sock, udp_server_buff, UDP_MAX_RECV_BYTE, 0, (struct sockaddr *)&source_addr, &socklen);
 
             // Error occurred during receiving
             if (len < 0) {
@@ -91,7 +91,7 @@ static void udp_server_task(void *pvParameters)
             else {
                 // Get the sender's ip address as string
                 inet_ntoa_r(((struct sockaddr_in *)&source_addr)->sin_addr, addr_str, sizeof(addr_str) - 1);
-                ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
+                // ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
 
                 // // print each byte received
                 // ESP_LOGI(TAG,"=== RECV ===");
@@ -102,7 +102,7 @@ static void udp_server_task(void *pvParameters)
                 // ESP_LOGI(TAG,"=== RECV ===");
 
                 // send data to stream buffer
-                if (xStreamBufferSend(network_stream_buf, udp_server_buff, len * sizeof(char), portMAX_DELAY) != len * sizeof(char)) {
+                if (xStreamBufferSend(network_stream_buf, (void *)udp_server_buff, len * sizeof(char), portMAX_DELAY) != len * sizeof(char)) {
                     exit(errno);
                 }
             }

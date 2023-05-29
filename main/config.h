@@ -95,7 +95,7 @@
 // SPI DMA channel
 #define SPI_DMA_CHAN SPI_DMA_CH_AUTO
 // define max read buffer size
-#define READ_BUF_SIZE_BYTES (250)
+#define READ_BUF_SIZE_BYTES (500)
 
 // Undefine USE_STDIN if no stdin is available (e.g. no USB UART) - a fixed delay will occur instead
 // of a wait for a keypress.
