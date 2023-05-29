@@ -74,7 +74,6 @@ static void udp_client_task(void *pvParameters)
                     break;
                 }
                 ESP_LOGI(TAG, "Message sent");
-
                 // vTaskDelay(2000 / portTICK_PERIOD_MS);
             } else {
                 ESP_LOGE(TAG, "No data received from mic_stream_buf!");

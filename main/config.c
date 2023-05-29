@@ -6,29 +6,8 @@
 #include "esp_private/wifi.h"
 
 static const char* TAG = "espnow_mic";
-static uint8_t broadcast_mac[ESP_NOW_ETH_ALEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 extern uint8_t* mic_read_buf;
 extern uint8_t* spk_write_buf;
-
-/* WiFi should start before using ESPNOW */
-void espnow_wifi_init(void) {
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    cfg.ampdu_rx_enable = 0;
-    cfg.ampdu_tx_enable = 0;
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
-    ESP_ERROR_CHECK(esp_wifi_set_mode(ESPNOW_WIFI_MODE));
-    ESP_ERROR_CHECK(esp_wifi_start());
-    ESP_ERROR_CHECK(esp_wifi_internal_set_fix_rate(ESPNOW_WIFI_IF, true, WIFI_PHY_RATE_MCS7_SGI));
-
-#if CONFIG_ESPNOW_ENABLE_LONG_RANGE
-    ESP_ERROR_CHECK(esp_wifi_set_protocol(ESPNOW_WIFI_IF, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G |
-                                                              WIFI_PROTOCOL_11N |
-                                                              WIFI_PROTOCOL_LR));
-#endif
-}
 
 /* initialize nvm */
 void init_non_volatile_storage(void) {
@@ -105,48 +84,7 @@ void i2s_adc_dac_config(void) {
 #endif
 }
 
-/* initialized espnow */
-// esp_err_t espnow_init(void) {
-
-//     /* Initialize ESPNOW and register sending and receiving callback function. */
-//     ESP_ERROR_CHECK(esp_now_init());
-// #if (RECV)
-//     /**
-//      * registration of receiving callback function
-//      * */
-//     ESP_ERROR_CHECK(esp_now_register_recv_cb(espnow_recv_task));
-// #endif
-
-// #if CONFIG_ESP_WIFI_STA_DISCONNECTED_PM_ENABLE
-//     ESP_ERROR_CHECK(esp_now_set_wake_window(65535));
-// #endif
-//     /* Set primary master key. */
-//     ESP_ERROR_CHECK(esp_now_set_pmk((uint8_t*)CONFIG_ESPNOW_PMK));
-
-//     /* Add broadcast peer information to peer list. */
-//     esp_now_peer_info_t* peer = malloc(sizeof(esp_now_peer_info_t));
-//     if (peer == NULL) {
-//         ESP_LOGE(TAG, "Malloc peer information fail");
-//         esp_now_deinit();
-//         return ESP_FAIL;
-//     }
-
-//     memset(peer, 0, sizeof(esp_now_peer_info_t));
-//     peer->channel = CONFIG_ESPNOW_CHANNEL;
-//     peer->ifidx = ESPNOW_WIFI_IF;
-//     peer->encrypt = false;
-//     memcpy(peer->peer_addr, broadcast_mac, ESP_NOW_ETH_ALEN);
-//     ESP_ERROR_CHECK(esp_now_add_peer(peer));
-//     free(peer);
-
-//     return ESP_OK;
-// }
-
 void init_config(void) {
-    // init_non_volatile_storage();
-    // espnow_wifi_init();
-    // espnow_init();
-
     i2s_adc_dac_config();
     // get the clock rate for adc and dac
     float freq = i2s_get_clk(EXAMPLE_I2S_NUM);

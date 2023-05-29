@@ -45,7 +45,7 @@
 #include <lwip/netdb.h>
 #include "addr_from_stdin.h"
 
-#define RECV 0
+#define RECV 1
 #define RECORD_TASK 0
 
 /** wifi configuration */

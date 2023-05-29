@@ -3,7 +3,7 @@
 #include "config.h"
 #include "espnow_mic.h"
 #include "udp_client.h"
-#include "espnow_recv.h"
+#include "udp_server.h"
 #include "sd_record.h"
 
 static const char* TAG = "main.c";
@@ -48,8 +48,7 @@ void app_main(void) {
 #endif
 
 #if (RECV)
-    // initialize the reciever and audio (only for reciever)
-    init_recv(network_stream_buf);
+    init_receiver_udp(network_stream_buf);
     init_audio_recv(network_stream_buf);
 #endif
 
