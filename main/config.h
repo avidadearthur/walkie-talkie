@@ -28,6 +28,7 @@
 #include "freertos/timers.h"
 #include "freertos/task.h"
 #include "freertos/stream_buffer.h"
+#include "freertos/event_groups.h"
 #include <math.h>
 #include "nvs_flash.h"
 #include "spi_flash_mmap.h"
@@ -36,6 +37,13 @@
 #include <sys/unistd.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <sys/param.h>
+#include "protocol_examples_common.h"
+#include "lwip/err.h"
+#include "lwip/sockets.h"
+#include "lwip/sys.h"
+#include <lwip/netdb.h>
+#include "addr_from_stdin.h"
 
 #define RECORD_TASK 0
 
@@ -86,7 +94,7 @@
 // SPI DMA channel
 #define SPI_DMA_CHAN SPI_DMA_CH_AUTO
 // define max read buffer size
-#define READ_BUF_SIZE_BYTES (250)
+#define READ_BUF_SIZE_BYTES (500)
 
 // Undefine USE_STDIN if no stdin is available (e.g. no USB UART) - a fixed delay will occur instead
 // of a wait for a keypress.

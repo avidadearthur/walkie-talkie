@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include "config.h"
 #include "espnow_mic.h"
-#include "espnow_send.h"
-#include "espnow_recv.h"
+#include "udp_client.h"
+#include "udp_server.h"
 #include "sd_record.h"
 
 static const char* TAG = "main.c";
@@ -75,18 +75,15 @@ void init(void) {
     }
 
     // initialize the reciever and audio (only for reciever)
-    init_recv(spk_stream_buf);
-    init_transmit(mic_stream_buf);
-
-    // init_audio_recv(spk_stream_buf);
-    // init_audio_trans(mic_stream_buf, record_stream_buf);
+    init_receiver_udp(spk_stream_buf);
+    init_transmit_udp(mic_stream_buf);
 
     /* RX_STATE first -> init_audio_transport then init_config*/
     /* TX_STATE first -> init_config then init_audio_transport*/
     // init combined function
     init_audio_transport(mic_stream_buf, spk_stream_buf);
 
-    // initialize espnow, nvm, wifi, and i2s configuration
+    // initialize i2s configuration
     init_config();
 }
 
